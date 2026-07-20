@@ -1,21 +1,24 @@
 import { useState } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { colors, spacing, typography } from "@/constants/theme";
 import { createPaymentIntent } from "@/services/paymentService";
 import { markBookingStatus, cancelBookingAndReleaseSeats } from "@/services/bookingService";
 
+interface Props {
+  bookingId: string;
+}
+
 /**
- * Variante web (Metro seleziona automaticamente questo file per la piattaforma
- * "web" al posto di payment.tsx). @stripe/stripe-react-native è un modulo
- * nativo privo di build web: una vera integrazione web richiede invece
- * "@stripe/stripe-js" + Stripe Elements. In attesa di quell'integrazione,
- * questo schermo chiama comunque la Cloud Function createPaymentIntent per
- * validare il flusso server-side, e simula l'esito lato client.
+ * Variante web (Metro seleziona questo file al posto di StripePaymentPanel.tsx
+ * per la piattaforma "web"). @stripe/stripe-react-native è un modulo nativo
+ * privo di build web: una vera integrazione web richiede "@stripe/stripe-js"
+ * + Stripe Elements. In attesa di quell'integrazione, chiama comunque la
+ * Cloud Function createPaymentIntent per validare il flusso server-side, e
+ * simula l'esito lato client.
  */
-export default function PaymentScreenWeb() {
-  const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
+export function StripePaymentPanel({ bookingId }: Props) {
   const [loading, setLoading] = useState(false);
 
   async function handlePay() {
@@ -43,7 +46,6 @@ export default function PaymentScreenWeb() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Pagamento</Text>
       <Text style={styles.note}>
         Versione web di sviluppo: il pagamento è simulato. L'app mobile usa Stripe PaymentSheet
         reale — l'integrazione web con Stripe Elements è nella roadmap.
@@ -55,7 +57,6 @@ export default function PaymentScreenWeb() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: spacing.lg, gap: spacing.md, justifyContent: "center" },
-  title: { fontSize: typography.heading.fontSize, fontWeight: "800", color: colors.ink },
+  container: { gap: spacing.md },
   note: { color: colors.muted, fontSize: typography.caption.fontSize },
 });

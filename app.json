@@ -44,7 +44,13 @@
           "locationAlwaysAndWhenInUsePermission": "Sabaudia Shuttle usa la tua posizione per mostrare in tempo reale il veicolo sulla mappa."
         }
       ],
-      "@stripe/stripe-react-native",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.it.sabaudiashuttle",
+          "enableGooglePay": true
+        }
+      ],
       [
         "expo-notifications",
         {
