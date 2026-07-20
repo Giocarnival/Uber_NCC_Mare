@@ -8,9 +8,11 @@
     "scheme": "sabaudiashuttle",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "it.sabaudiashuttle.app"
     },
     "android": {
+      "package": "it.sabaudiashuttle.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
