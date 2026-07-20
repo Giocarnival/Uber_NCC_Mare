@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { colors } from "@/constants/theme";
+import { LogoutButton } from "@/components/LogoutButton";
 
 export default function AdminLayout() {
   return (
@@ -8,6 +9,7 @@ export default function AdminLayout() {
         headerStyle: { backgroundColor: colors.sea },
         headerTintColor: colors.white,
         contentStyle: { backgroundColor: colors.sand },
+        headerRight: () => <LogoutButton />,
       }}
     >
       <Stack.Screen name="index" options={{ title: "Pannello Admin" }} />
