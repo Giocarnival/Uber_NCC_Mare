@@ -1,0 +1,118 @@
+rules_version = '2';
+
+// Regole di sicurezza Firestore per Sabaudia Shuttle (capitolato §21).
+// Ruoli: customer, driver, admin — memorizzati in users/{uid}.role.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ruolo;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && role() == "admin";
+    }
+
+    function isDriver() {
+      return isSignedIn() && role() == "driver";
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // users: ognuno legge/scrive solo il proprio profilo; l'admin legge/scrive tutto.
+    match /users/{userId} {
+      allow read, update: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow delete: if isAdmin();
+    }
+
+    // vehicles, drivers, routes, timeSlots, adminSettings, coupons:
+    // lettura pubblica (necessaria per mostrare mappa/tratte/orari ai clienti),
+    // scrittura riservata all'admin. I driver possono aggiornare solo lo stato
+    // e il veicolo assegnato tramite Cloud Function, non direttamente qui salvo
+    // il proprio record driver.
+    match /vehicles/{vehicleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /drivers/{driverId} {
+      allow read: if isSignedIn();
+      allow update: if isAdmin() || (isDriver() && request.auth.uid == driverId
+                      && request.resource.data.diff(resource.data).affectedKeys()
+                           .hasOnly(["stato"]));
+      allow create, delete: if isAdmin();
+    }
+
+    match /routes/{routeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /timeSlots/{slotId} {
+      allow read: if true;
+      // La riduzione posti disponibili avviene solo tramite bookingService
+      // in transazione: qui permettiamo l'update ai soli campi gestiti da
+      // clienti autenticati (postiDisponibili) o interamente dall'admin.
+      allow update: if isAdmin() || (isSignedIn() &&
+                      request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(["postiDisponibili"]));
+      allow create, delete: if isAdmin();
+    }
+
+    match /adminSettings/{settingsId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // bookings: il cliente crea/legge solo le proprie prenotazioni;
+    // il driver legge le prenotazioni del proprio veicolo; l'admin tutto.
+    match /bookings/{bookingId} {
+      allow read: if isAdmin()
+                   || (isSignedIn() && resource.data.userId == request.auth.uid)
+                   || (isDriver() && resource.data.vehicleId ==
+                         get(/databases/$(database)/documents/drivers/$(request.auth.uid)).data.vehicleId);
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin()
+                     || (isSignedIn() && resource.data.userId == request.auth.uid)
+                     || (isDriver() && resource.data.vehicleId ==
+                           get(/databases/$(database)/documents/drivers/$(request.auth.uid)).data.vehicleId);
+      allow delete: if isAdmin();
+    }
+
+    // payments: leggibile solo dal proprietario del booking associato o dall'admin.
+    // La scrittura avviene esclusivamente da Cloud Functions (Admin SDK, che
+    // bypassa queste regole), mai direttamente dal client.
+    match /payments/{paymentId} {
+      allow read: if isAdmin()
+                   || (isSignedIn() &&
+                        get(/databases/$(database)/documents/bookings/$(resource.data.bookingId)).data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    // vehicleLocations: letto dai customer per la mappa, scritto dal driver
+    // assegnato al veicolo (o dall'admin).
+    match /vehicleLocations/{vehicleId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin()
+                    || (isDriver() &&
+                         get(/databases/$(database)/documents/drivers/$(request.auth.uid)).data.vehicleId == vehicleId);
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow write: if isAdmin();
+    }
+  }
+}
