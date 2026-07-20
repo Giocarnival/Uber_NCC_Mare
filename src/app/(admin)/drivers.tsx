@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, FlatList, TextInput, Alert } from "react-native";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { colors, radius, spacing, typography } from "@/constants/theme";
-import { listDrivers, createDriver, updateDriver } from "@/services/driverService";
+import { listDrivers, updateDriver } from "@/services/driverService";
+import { createStaffAccount } from "@/services/authService";
 import { listVehicles } from "@/services/vehicleService";
 import type { Driver, Vehicle } from "@/types";
 
@@ -13,6 +14,7 @@ export default function AdminDriversScreen() {
   const [cognome, setCognome] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function load() {
@@ -25,18 +27,26 @@ export default function AdminDriversScreen() {
   }, []);
 
   async function handleAdd() {
-    if (!nome || !cognome || !email) {
-      Alert.alert("Dati mancanti", "Inserisci nome, cognome ed email.");
+    if (!nome || !cognome || !email || !password) {
+      Alert.alert("Dati mancanti", "Inserisci nome, cognome, email e una password temporanea.");
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert("Password troppo corta", "Usa almeno 6 caratteri.");
       return;
     }
     setSaving(true);
     try {
-      await createDriver({ nome, cognome, telefono, email, vehicleId: null, stato: "offline" });
+      await createStaffAccount({ nome, cognome, telefono, email, password, ruolo: "driver" });
       setNome("");
       setCognome("");
       setTelefono("");
       setEmail("");
+      setPassword("");
       await load();
+      Alert.alert("Autista creato", `Comunica all'autista email e password per il primo accesso.`);
+    } catch (err: any) {
+      Alert.alert("Creazione non riuscita", err?.message ?? "Riprova.");
     } finally {
       setSaving(false);
     }
@@ -53,8 +63,9 @@ export default function AdminDriversScreen() {
         <TextInput style={styles.input} placeholder="Nome" placeholderTextColor={colors.muted} value={nome} onChangeText={setNome} />
         <TextInput style={styles.input} placeholder="Cognome" placeholderTextColor={colors.muted} value={cognome} onChangeText={setCognome} />
         <TextInput style={styles.input} placeholder="Telefono" placeholderTextColor={colors.muted} value={telefono} onChangeText={setTelefono} />
-        <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.muted} value={email} onChangeText={setEmail} />
-        <PrimaryButton label="Aggiungi autista" onPress={handleAdd} loading={saving} />
+        <TextInput style={styles.input} placeholder="Email" placeholderTextColor={colors.muted} autoCapitalize="none" value={email} onChangeText={setEmail} />
+        <TextInput style={styles.input} placeholder="Password temporanea" placeholderTextColor={colors.muted} secureTextEntry value={password} onChangeText={setPassword} />
+        <PrimaryButton label="Crea account autista" onPress={handleAdd} loading={saving} />
       </View>
 
       <FlatList

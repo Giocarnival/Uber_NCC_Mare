@@ -1,12 +1,21 @@
 import { onCall, HttpsError } from "firebase-functions/v2/https";
+import type { CallableRequest } from "firebase-functions/v2/https";
 import { db } from "./admin";
 
 const ANDATA = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30"];
 const RITORNO = ["17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30"];
 
-async function assertAdmin(uid: string) {
-  const snap = await db.collection("users").doc(uid).get();
-  if (!snap.exists || snap.data()?.ruolo !== "admin") {
+/**
+ * Verifica il ruolo admin leggendo prima il custom claim (veloce, nessuna
+ * lettura Firestore) e ricadendo su una lettura del profilo solo se il
+ * claim non è ancora stato propagato al token (es. subito dopo il seed).
+ */
+async function assertAdmin(request: CallableRequest) {
+  if (request.auth?.token.role === "admin") return;
+
+  const uid = request.auth?.uid;
+  const snap = uid ? await db.collection("users").doc(uid).get() : null;
+  if (!snap?.exists || snap.data()?.ruolo !== "admin") {
     throw new HttpsError("permission-denied", "Solo un amministratore può generare gli slot.");
   }
 }
@@ -26,7 +35,7 @@ function* dateRange(startISO: string, endISO: string) {
  */
 export const generateSeasonalSlots = onCall(async (request) => {
   if (!request.auth) throw new HttpsError("unauthenticated", "Devi essere autenticato.");
-  await assertAdmin(request.auth.uid);
+  await assertAdmin(request);
 
   const {
     startDate,

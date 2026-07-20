@@ -5,7 +5,8 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { auth, db } from "./firebase";
+import { httpsCallable } from "firebase/functions";
+import { auth, db, functions } from "./firebase";
 import type { UserProfile, UserRole } from "../types";
 
 export async function registerCustomer(params: {
@@ -50,6 +51,27 @@ export async function getCurrentUserProfile(uid: string): Promise<UserProfile | 
 
 export async function updateUserProfile(uid: string, changes: Partial<UserProfile>) {
   await setDoc(doc(db, "users", uid), changes, { merge: true });
+}
+
+/**
+ * Crea un account staff (autista o admin) tramite la Cloud Function
+ * `createStaffAccount` (solo un admin autenticato può chiamarla). A
+ * differenza di registerCustomer, qui l'account non viene creato lato
+ * client: serve per non far perdere all'admin la propria sessione (creare
+ * un utente con l'SDK client autentica automaticamente il nuovo account al
+ * posto di quello corrente).
+ */
+export async function createStaffAccount(params: {
+  email: string;
+  password: string;
+  nome: string;
+  cognome: string;
+  telefono: string;
+  ruolo: "driver" | "admin";
+}): Promise<{ uid: string }> {
+  const callable = httpsCallable<typeof params, { uid: string }>(functions, "createStaffAccount");
+  const result = await callable(params);
+  return result.data;
 }
 
 export function dashboardRouteForRole(role: UserRole): string {

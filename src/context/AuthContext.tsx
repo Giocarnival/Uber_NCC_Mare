@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { auth } from "../services/firebase";
 import { getCurrentUserProfile } from "../services/authService";
+import { registerForPushNotifications } from "../services/notificationService";
 import type { UserProfile } from "../types";
 
 interface AuthContextValue {
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (firebaseUser) {
         const p = await getCurrentUserProfile(firebaseUser.uid).catch(() => null);
         setProfile(p);
+        registerForPushNotifications(firebaseUser.uid).catch(() => {});
       } else {
         setProfile(null);
       }

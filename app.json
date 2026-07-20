@@ -43,6 +43,13 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Sabaudia Shuttle usa la tua posizione per mostrare in tempo reale il veicolo sulla mappa."
         }
+      ],
+      "@stripe/stripe-react-native",
+      [
+        "expo-notifications",
+        {
+          "color": "#0E7C9D"
+        }
       ]
     ],
     "experiments": {

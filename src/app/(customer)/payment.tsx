@@ -1,59 +1,92 @@
-import { useState } from "react";
-import { View, Text, StyleSheet, Alert } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { View, Text, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { useStripe } from "@stripe/stripe-react-native";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { colors, spacing, typography } from "@/constants/theme";
 import { createPaymentIntent } from "@/services/paymentService";
-import { markBookingStatus, cancelBookingAndReleaseSeats } from "@/services/bookingService";
+import { cancelBookingAndReleaseSeats, subscribeToBooking } from "@/services/bookingService";
 
 /**
- * Schermata di pagamento. Il flusso reale con Stripe richiede il pacchetto
- * "@stripe/stripe-react-native": inizializzare lo StripeProvider nel root
- * layout con la publishableKey, poi qui usare `confirmPayment(clientSecret, {type:'Card'})`
- * con il PaymentSheet o CardField per raccogliere i dati carta lato client.
- * Questa versione MVP chiama comunque la Cloud Function `createPaymentIntent`
- * per validare il flusso server-side, e simula l'esito per poter testare
- * l'intero percorso senza credenziali Stripe live.
+ * Pagamento reale con Stripe PaymentSheet (iOS/Android). I dati carta sono
+ * raccolti interamente dallo Stripe SDK: questo schermo non li vede né li
+ * salva. Dopo `presentPaymentSheet`, l'esito definitivo arriva in modo
+ * asincrono dal webhook Stripe lato server (functions/src/payments.ts), che
+ * aggiorna bookings.stato — qui restiamo in ascolto realtime finché non
+ * diventa "paid" prima di mostrare il ticket.
  */
 export default function PaymentScreen() {
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
-  const [loading, setLoading] = useState(false);
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const [initializing, setInitializing] = useState(true);
+  const [ready, setReady] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { clientSecret } = await createPaymentIntent({ bookingId, amount: 0 });
+        const { error } = await initPaymentSheet({
+          merchantDisplayName: "Sabaudia Shuttle",
+          paymentIntentClientSecret: clientSecret,
+        });
+        if (cancelled) return;
+        if (error) setInitError(error.message);
+        else setReady(true);
+      } catch (err: any) {
+        if (!cancelled) setInitError(err?.message ?? "Impossibile inizializzare il pagamento.");
+      } finally {
+        if (!cancelled) setInitializing(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      unsubscribeRef.current?.();
+    };
+  }, [bookingId]);
 
   async function handlePay() {
-    setLoading(true);
+    setPaying(true);
     try {
-      // In assenza di EXPO_PUBLIC_FIREBASE_* configurate questa chiamata fallirà:
-      // in quel caso si passa direttamente alla simulazione locale.
-      await createPaymentIntent({ bookingId, amount: 0 }).catch(() => null);
+      const { error } = await presentPaymentSheet();
+      if (error) {
+        if (error.code !== "Canceled") Alert.alert("Pagamento non riuscito", error.message);
+        return;
+      }
 
-      await markBookingStatus(bookingId, "paid");
-      router.replace({ pathname: "/(customer)/ticket", params: { bookingId } });
-    } catch (err: any) {
-      Alert.alert("Pagamento non riuscito", err?.message ?? "Riprova.");
+      unsubscribeRef.current = subscribeToBooking(bookingId, (booking) => {
+        if (booking.stato === "paid") {
+          unsubscribeRef.current?.();
+          router.replace({ pathname: "/(customer)/ticket", params: { bookingId } });
+        }
+      });
     } finally {
-      setLoading(false);
+      setPaying(false);
     }
   }
 
   async function handleCancel() {
-    setLoading(true);
-    try {
-      await cancelBookingAndReleaseSeats(bookingId);
-      router.replace("/(customer)");
-    } finally {
-      setLoading(false);
-    }
+    unsubscribeRef.current?.();
+    await cancelBookingAndReleaseSeats(bookingId);
+    router.replace("/(customer)");
   }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Pagamento</Text>
       <Text style={styles.note}>
-        Integrazione Stripe da completare con @stripe/stripe-react-native. Nessun dato carta viene
-        gestito da questo schermo: la raccolta avviene tramite PaymentSheet Stripe lato client.
+        I dati della tua carta sono gestiti direttamente da Stripe: questa app non li vede né li
+        salva.
       </Text>
-      <PrimaryButton label="Paga ora" onPress={handlePay} loading={loading} />
-      <PrimaryButton label="Annulla prenotazione" variant="secondary" onPress={handleCancel} disabled={loading} />
+
+      {initializing && <ActivityIndicator color={colors.sea} />}
+      {initError && <Text style={styles.error}>{initError}</Text>}
+
+      <PrimaryButton label="Paga ora" onPress={handlePay} loading={paying} disabled={!ready} />
+      <PrimaryButton label="Annulla prenotazione" variant="secondary" onPress={handleCancel} disabled={paying} />
     </View>
   );
 }
@@ -62,4 +95,5 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: spacing.lg, gap: spacing.md, justifyContent: "center" },
   title: { fontSize: typography.heading.fontSize, fontWeight: "800", color: colors.ink },
   note: { color: colors.muted, fontSize: typography.caption.fontSize },
+  error: { color: colors.danger, fontSize: typography.caption.fontSize },
 });

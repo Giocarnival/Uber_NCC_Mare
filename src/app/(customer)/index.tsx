@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, Platform } from "react-native";
 import { router } from "expo-router";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { colors, spacing, typography } from "@/constants/theme";
+import { STOPS } from "@/constants/config";
 import { useAuth } from "@/context/AuthContext";
 import { subscribeToVehicleLocations } from "@/services/locationService";
 import { listActiveVehicles } from "@/services/vehicleService";
+import { getETAToNearestStop } from "@/services/routesApiService";
 import type { Vehicle, VehicleLocation } from "@/types";
 
 let MapView: any;
@@ -16,16 +18,27 @@ if (Platform.OS !== "web") {
   VehicleMarkerComp = require("@/components/VehicleMarker").VehicleMarker;
 }
 
+const STOP_LIST = [STOPS.sabaudiaCentro, STOPS.lungomare];
+
 export default function CustomerHomeScreen() {
   const { profile } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [locations, setLocations] = useState<VehicleLocation[]>([]);
+  const [etaByVehicle, setEtaByVehicle] = useState<Record<string, number | null>>({});
 
   useEffect(() => {
     listActiveVehicles().then(setVehicles).catch(() => {});
     const unsub = subscribeToVehicleLocations(setLocations);
     return unsub;
   }, []);
+
+  useEffect(() => {
+    locations.forEach((loc) => {
+      getETAToNearestStop({ lat: loc.lat, lng: loc.lng }, STOP_LIST).then((eta) => {
+        setEtaByVehicle((prev) => ({ ...prev, [loc.vehicleId]: eta }));
+      });
+    });
+  }, [locations]);
 
   return (
     <View style={styles.container}>
@@ -46,7 +59,9 @@ export default function CustomerHomeScreen() {
           >
             {vehicles.map((v) => {
               const loc = locations.find((l) => l.vehicleId === v.id);
-              return loc ? <VehicleMarkerComp key={v.id} vehicle={v} location={loc} /> : null;
+              return loc ? (
+                <VehicleMarkerComp key={v.id} vehicle={v} location={loc} etaMinutes={etaByVehicle[v.id]} />
+              ) : null;
             })}
           </MapView>
         )}

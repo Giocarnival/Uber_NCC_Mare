@@ -43,3 +43,11 @@ export const TIME_SLOTS = {
 
 export const CANCELLATION_POLICY =
   "Cancellazione gratuita fino a 2 ore prima della partenza. Oltre tale termine nessun rimborso.";
+
+// Coordinate indicative delle due fermate, usate come fallback per la mappa
+// e per il calcolo ETA via Google Routes API. Da affinare con le coordinate
+// esatte del punto di ritrovo scelto (parcheggio, piazza, stabilimento...).
+export const STOPS = {
+  sabaudiaCentro: { lat: 41.302, lng: 13.0269 },
+  lungomare: { lat: 41.2895, lng: 13.0503 },
+};

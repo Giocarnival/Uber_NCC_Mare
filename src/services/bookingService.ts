@@ -3,7 +3,9 @@ import {
   doc,
   runTransaction,
   updateDoc,
+  getDoc,
   getDocs,
+  onSnapshot,
   query,
   where,
   orderBy,
@@ -76,6 +78,21 @@ export async function createBooking(params: CreateBookingParams): Promise<Bookin
   });
 
   return booking;
+}
+
+export async function getBooking(bookingId: string): Promise<Booking | null> {
+  const snap = await getDoc(doc(db, "bookings", bookingId));
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as Booking) : null;
+}
+
+/**
+ * Sottoscrizione realtime usata dalla schermata di pagamento per attendere
+ * la conferma asincrona che arriva dal webhook Stripe lato server.
+ */
+export function subscribeToBooking(bookingId: string, onUpdate: (booking: Booking) => void): () => void {
+  return onSnapshot(doc(db, "bookings", bookingId), (snap) => {
+    if (snap.exists()) onUpdate({ id: snap.id, ...snap.data() } as Booking);
+  });
 }
 
 export async function markBookingStatus(bookingId: string, stato: BookingStatus, paymentId?: string) {
