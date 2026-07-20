@@ -1,8 +1,10 @@
 import { Stack } from "expo-router";
 import { colors } from "@/constants/theme";
 import { LogoutButton } from "@/components/LogoutButton";
+import { useRequireAuth } from "@/context/AuthContext";
 
 export default function DriverLayout() {
+  useRequireAuth();
   return (
     <Stack
       screenOptions={{
