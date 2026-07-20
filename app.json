@@ -22,7 +22,7 @@
       "predictiveBackGestureEnabled": false,
       "config": {
         "googleMaps": {
-          "apiKey": "INSERISCI_QUI_LA_TUA_GOOGLE_MAPS_API_KEY_ANDROID"
+          "apiKey": "AIzaSyDGGkqRfKlNtUYlhLA6J56bcdhfd1Ack6s"
         }
       },
       "permissions": [
