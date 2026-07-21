@@ -4,19 +4,14 @@ import { router } from "expo-router";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { colors, radius, spacing, typography } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
-import { getDriverByUserId, setDriverStatus } from "@/services/driverService";
+import { useDriverDuty } from "@/context/DriverDutyContext";
+import { getDriverByUserId } from "@/services/driverService";
 import { listVehicles } from "@/services/vehicleService";
-import type { Driver, DriverStatus, Vehicle } from "@/types";
-
-const statusOptions: DriverStatus[] = ["offline", "available", "busy"];
-const statusLabel: Record<DriverStatus, string> = {
-  offline: "Offline",
-  available: "Disponibile",
-  busy: "In corsa",
-};
+import type { Driver, Vehicle } from "@/types";
 
 export default function DriverDashboardScreen() {
   const { user, profile } = useAuth();
+  const { onDuty, starting, lastLocation, permissionDenied, startDuty, endDuty } = useDriverDuty();
   const [driver, setDriver] = useState<Driver | null>(null);
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
 
@@ -31,12 +26,6 @@ export default function DriverDashboardScreen() {
     });
   }, [user]);
 
-  async function handleStatusChange(next: DriverStatus) {
-    if (!driver) return;
-    await setDriverStatus(driver.id, next);
-    setDriver({ ...driver, stato: next });
-  }
-
   return (
     <View style={styles.container}>
       <Text style={styles.greeting}>Ciao{profile?.nome ? `, ${profile.nome}` : ""}</Text>
@@ -46,27 +35,33 @@ export default function DriverDashboardScreen() {
         <Text style={styles.cardValue}>{vehicle ? `${vehicle.nome} · ${vehicle.targa}` : "Nessun veicolo assegnato"}</Text>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardLabel}>Stato servizio</Text>
-        <View style={styles.statusRow}>
-          {statusOptions.map((s) => (
-            <PrimaryButton
-              key={s}
-              label={statusLabel[s]}
-              variant={driver?.stato === s ? "primary" : "secondary"}
-              onPress={() => handleStatusChange(s)}
-            />
-          ))}
+      <View style={[styles.card, styles.dutyCard]}>
+        <View style={[styles.dutyDot, { backgroundColor: onDuty ? colors.success : colors.muted }]} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.cardLabel}>Stato servizio</Text>
+          <Text style={styles.cardValue}>{onDuty ? "In servizio — posizione condivisa" : "Non in servizio"}</Text>
+          {onDuty && lastLocation && (
+            <Text style={styles.coords}>
+              {lastLocation.lat.toFixed(5)}, {lastLocation.lng.toFixed(5)}
+            </Text>
+          )}
+          {permissionDenied && (
+            <Text style={styles.error}>Permesso posizione negato: abilitalo nelle impostazioni del telefono.</Text>
+          )}
         </View>
       </View>
 
+      <PrimaryButton
+        label={onDuty ? "Termina servizio" : "Inizia servizio"}
+        variant={onDuty ? "danger" : "primary"}
+        loading={starting}
+        disabled={!vehicle}
+        onPress={onDuty ? endDuty : startDuty}
+      />
+      {!vehicle && <Text style={styles.hint}>Un amministratore deve assegnarti un veicolo prima di iniziare.</Text>}
+
       <View style={styles.actions}>
-        <PrimaryButton label="Corse di oggi" onPress={() => router.push("/(driver)/trips")} />
-        <PrimaryButton
-          label="Posizione GPS"
-          variant="secondary"
-          onPress={() => router.push("/(driver)/location-status")}
-        />
+        <PrimaryButton label="Corse di oggi" variant="secondary" onPress={() => router.push("/(driver)/trips")} />
       </View>
     </View>
   );
@@ -76,8 +71,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: spacing.lg, gap: spacing.md },
   greeting: { fontSize: typography.heading.fontSize, fontWeight: "800", color: colors.ink },
   card: { backgroundColor: colors.white, borderRadius: radius.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border, gap: spacing.sm },
+  dutyCard: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
+  dutyDot: { width: 12, height: 12, borderRadius: 6, marginTop: 4 },
   cardLabel: { color: colors.muted, fontSize: typography.caption.fontSize },
   cardValue: { color: colors.ink, fontWeight: "700", fontSize: typography.body.fontSize },
-  statusRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  coords: { color: colors.seaDark, fontWeight: "600", fontSize: typography.caption.fontSize, marginTop: 4 },
+  error: { color: colors.danger, fontSize: typography.caption.fontSize, marginTop: 4 },
+  hint: { color: colors.muted, fontSize: typography.caption.fontSize, textAlign: "center" },
   actions: { gap: spacing.sm, marginTop: "auto" },
 });
