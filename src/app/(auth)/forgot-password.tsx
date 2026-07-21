@@ -35,8 +35,10 @@ export default function ForgotPasswordScreen() {
         placeholderTextColor={colors.muted}
         autoCapitalize="none"
         keyboardType="email-address"
+        returnKeyType="go"
         value={email}
         onChangeText={setEmail}
+        onSubmitEditing={handleReset}
       />
 
       <PrimaryButton label="Invia link di recupero" onPress={handleReset} loading={loading} />

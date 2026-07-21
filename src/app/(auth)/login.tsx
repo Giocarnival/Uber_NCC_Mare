@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { View, Text, TextInput, StyleSheet, Alert } from "react-native";
 import { router, useLocalSearchParams, Link } from "expo-router";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -17,6 +17,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
 
   async function handleLogin() {
     if (!email || !password) {
@@ -49,16 +50,22 @@ export default function LoginScreen() {
         placeholderTextColor={colors.muted}
         autoCapitalize="none"
         keyboardType="email-address"
+        returnKeyType="next"
         value={email}
         onChangeText={setEmail}
+        onSubmitEditing={() => passwordRef.current?.focus()}
+        blurOnSubmit={false}
       />
       <TextInput
+        ref={passwordRef}
         style={styles.input}
         placeholder="Password"
         placeholderTextColor={colors.muted}
         secureTextEntry
+        returnKeyType="go"
         value={password}
         onChangeText={setPassword}
+        onSubmitEditing={handleLogin}
       />
 
       <PrimaryButton label="Accedi" onPress={handleLogin} loading={loading} />

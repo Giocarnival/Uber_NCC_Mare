@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { View, Text, TextInput, StyleSheet, Alert, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -12,6 +12,11 @@ export default function RegisterScreen() {
   const [telefono, setTelefono] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const cognomeRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const telefonoRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
 
   async function handleRegister() {
     if (!nome || !cognome || !email || !password) {
@@ -37,32 +42,62 @@ export default function RegisterScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Crea il tuo account</Text>
 
-      <TextInput style={styles.input} placeholder="Nome" placeholderTextColor={colors.muted} value={nome} onChangeText={setNome} />
-      <TextInput style={styles.input} placeholder="Cognome" placeholderTextColor={colors.muted} value={cognome} onChangeText={setCognome} />
       <TextInput
+        style={styles.input}
+        placeholder="Nome"
+        placeholderTextColor={colors.muted}
+        returnKeyType="next"
+        value={nome}
+        onChangeText={setNome}
+        onSubmitEditing={() => cognomeRef.current?.focus()}
+        blurOnSubmit={false}
+      />
+      <TextInput
+        ref={cognomeRef}
+        style={styles.input}
+        placeholder="Cognome"
+        placeholderTextColor={colors.muted}
+        returnKeyType="next"
+        value={cognome}
+        onChangeText={setCognome}
+        onSubmitEditing={() => emailRef.current?.focus()}
+        blurOnSubmit={false}
+      />
+      <TextInput
+        ref={emailRef}
         style={styles.input}
         placeholder="Email"
         placeholderTextColor={colors.muted}
         autoCapitalize="none"
         keyboardType="email-address"
+        returnKeyType="next"
         value={email}
         onChangeText={setEmail}
+        onSubmitEditing={() => telefonoRef.current?.focus()}
+        blurOnSubmit={false}
       />
       <TextInput
+        ref={telefonoRef}
         style={styles.input}
         placeholder="Telefono"
         placeholderTextColor={colors.muted}
         keyboardType="phone-pad"
+        returnKeyType="next"
         value={telefono}
         onChangeText={setTelefono}
+        onSubmitEditing={() => passwordRef.current?.focus()}
+        blurOnSubmit={false}
       />
       <TextInput
+        ref={passwordRef}
         style={styles.input}
         placeholder="Password"
         placeholderTextColor={colors.muted}
         secureTextEntry
+        returnKeyType="go"
         value={password}
         onChangeText={setPassword}
+        onSubmitEditing={handleRegister}
       />
 
       <PrimaryButton label="Registrati" onPress={handleRegister} loading={loading} />
