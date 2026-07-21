@@ -20,6 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log("[AuthProvider] onAuthStateChanged fired, uid:", firebaseUser?.uid ?? null);
       setUser(firebaseUser);
       if (firebaseUser) {
         const p = await getCurrentUserProfile(firebaseUser.uid).catch(() => null);

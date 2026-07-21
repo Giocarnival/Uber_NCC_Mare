@@ -18,6 +18,7 @@ import { colors } from "@/constants/theme";
 function AppNavigator() {
   const { user, loading } = useAuth();
   const navigatorKey = loading ? "loading" : user ? `auth-${user.uid}` : "anon";
+  console.log("[AppNavigator] render, navigatorKey:", navigatorKey);
 
   return (
     <Stack
