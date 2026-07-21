@@ -1,20 +1,23 @@
 import { useState } from "react";
-import { Pressable, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { Pressable, Text, StyleSheet, ActivityIndicator, Alert, Platform } from "react-native";
 import { colors } from "../constants/theme";
 import { logoutUser } from "../services/authService";
 
 /**
- * Non naviga esplicitamente dopo il logout: quando l'utente diventa null,
- * AppNavigator (src/app/_layout.tsx) cambia la key dello Stack e React
- * rimonta l'intera navigazione da zero, ripartendo dalla home. Il timeout
- * evita che il pulsante resti bloccato a ruotare all'infinito se signOut()
- * dovesse impiegare troppo (es. problemi di rete).
+ * Su web, dopo signOut() forziamo una navigazione reale del browser verso
+ * "/" (window.location.href) invece di affidarci alla navigazione interna
+ * di Expo Router: sul web quest'ultima sincronizza la schermata con l'URL
+ * del browser, quindi anche rimontando l'intero albero di navigazione (via
+ * key) la pagina mostrata torna a derivare dallo stesso URL non cambiato,
+ * mostrando di nuovo la schermata precedente. Un cambio reale della pagina
+ * bypassa del tutto questo comportamento. Su nativo (iOS/Android) non c'è
+ * un URL di pagina: lì la navigazione dopo il logout è gestita dal cambio
+ * di `key` in AppNavigator (src/app/_layout.tsx).
  */
 export function LogoutButton() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   async function handleLogout() {
-    console.log("[LogoutButton] pressed, loggingOut was:", loggingOut);
     setLoggingOut(true);
     try {
       await Promise.race([
@@ -23,9 +26,10 @@ export function LogoutButton() {
           setTimeout(() => reject(new Error("Il logout non ha risposto in tempo. Riprova.")), 8000)
         ),
       ]);
-      console.log("[LogoutButton] signOut resolved");
+      if (Platform.OS === "web") {
+        window.location.href = "/";
+      }
     } catch (err: any) {
-      console.log("[LogoutButton] signOut error:", err?.message ?? err);
       Alert.alert("Logout non riuscito", err?.message ?? "Riprova.");
     } finally {
       setLoggingOut(false);
