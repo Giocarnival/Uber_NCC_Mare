@@ -1,28 +1,37 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, FlatList } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { colors, radius, spacing, typography } from "@/constants/theme";
-import { listBookingsForSlot, markBookingStatus } from "@/services/bookingService";
+import { useAuth } from "@/context/AuthContext";
+import { getDriverByUserId } from "@/services/driverService";
+import { listBookingsForVehicleAndSlot, markBookingStatus } from "@/services/bookingService";
 import type { Booking } from "@/types";
 
 export default function DriverTripDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [vehicleId, setVehicleId] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
 
-  async function load() {
-    const all = await listBookingsForSlot(id).catch(() => [] as Booking[]);
+  async function load(currentVehicleId: string) {
+    const all = await listBookingsForVehicleAndSlot(currentVehicleId, id).catch(() => [] as Booking[]);
     setBookings(all);
   }
 
   useEffect(() => {
-    load();
-  }, [id]);
+    if (!user) return;
+    getDriverByUserId(user.uid).then((driver) => {
+      if (!driver?.vehicleId) return;
+      setVehicleId(driver.vehicleId);
+      load(driver.vehicleId);
+    });
+  }, [user, id]);
 
   async function confirmBoarding(bookingId: string) {
     await markBookingStatus(bookingId, "completed");
-    load();
+    if (vehicleId) load(vehicleId);
   }
 
   return (
@@ -31,6 +40,12 @@ export default function DriverTripDetailScreen() {
         label={started ? "Corsa avviata" : "Avvia corsa"}
         onPress={() => setStarted(true)}
         disabled={started}
+      />
+      <PrimaryButton
+        label="Scansiona QR biglietto"
+        icon="qr-code-outline"
+        variant="accent"
+        onPress={() => router.push("/(driver)/qr-scan" as any)}
       />
 
       <Text style={styles.sectionTitle}>Passeggeri prenotati</Text>

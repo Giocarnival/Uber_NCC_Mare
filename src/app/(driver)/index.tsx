@@ -71,6 +71,13 @@ export default function DriverDashboardScreen() {
 
       <View style={styles.actions}>
         <PrimaryButton
+          label="Scansiona QR biglietto"
+          icon="qr-code-outline"
+          variant="accent"
+          disabled={!onDuty}
+          onPress={() => router.push("/(driver)/qr-scan" as any)}
+        />
+        <PrimaryButton
           label="Corse di oggi"
           icon="today-outline"
           variant="secondary"

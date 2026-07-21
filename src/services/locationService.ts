@@ -5,8 +5,13 @@ import type { VehicleLocation } from "../types";
 /**
  * Chiamata dall'app autista ogni 10-15s mentre è online (capitolato §18/§19).
  */
-export async function reportVehicleLocation(vehicleId: string, lat: number, lng: number) {
-  const location: VehicleLocation = { vehicleId, lat, lng, updatedAt: Date.now() };
+export async function reportVehicleLocation(
+  vehicleId: string,
+  lat: number,
+  lng: number,
+  heading?: number | null
+) {
+  const location: VehicleLocation = { vehicleId, lat, lng, heading: heading ?? null, updatedAt: Date.now() };
   await setDoc(doc(db, "vehicleLocations", vehicleId), location);
 }
 

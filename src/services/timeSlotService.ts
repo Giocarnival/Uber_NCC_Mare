@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   addDoc,
   updateDoc,
@@ -12,6 +13,11 @@ import type { TimeSlot } from "../types";
 import { TIME_SLOTS, VEHICLES } from "../constants/config";
 
 const timeSlotsCol = collection(db, "timeSlots");
+
+export async function getTimeSlot(id: string): Promise<TimeSlot | null> {
+  const snap = await getDoc(doc(db, "timeSlots", id));
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as TimeSlot) : null;
+}
 
 export async function listTimeSlotsForRouteAndDate(
   routeId: string,

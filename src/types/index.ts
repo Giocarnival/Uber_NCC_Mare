@@ -99,6 +99,7 @@ export interface VehicleLocation {
   vehicleId: string;
   lat: number;
   lng: number;
+  heading?: number | null; // gradi 0-360, direzione di marcia (bussola)
   updatedAt: number;
 }
 

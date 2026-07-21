@@ -60,6 +60,12 @@
         {
           "color": "#0E7C9D"
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Sabaudia Shuttle usa la fotocamera per scansionare il QR code dei biglietti al momento della salita."
+        }
       ]
     ],
     "experiments": {

@@ -63,7 +63,12 @@ export function DriverDutyProvider({ children }: { children: ReactNode }) {
       const tick = async () => {
         const loc = await Location.getCurrentPositionAsync({});
         setLastLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
-        await reportVehicleLocation(driver.vehicleId!, loc.coords.latitude, loc.coords.longitude);
+        await reportVehicleLocation(
+          driver.vehicleId!,
+          loc.coords.latitude,
+          loc.coords.longitude,
+          loc.coords.heading
+        );
       };
       await tick();
       intervalRef.current = setInterval(tick, REPORT_INTERVAL_MS);

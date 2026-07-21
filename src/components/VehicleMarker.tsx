@@ -1,5 +1,7 @@
+import { memo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Marker, Callout } from "react-native-maps";
+import { Ionicons } from "@expo/vector-icons";
 import { colors, radius } from "../constants/theme";
 import type { Vehicle, VehicleLocation } from "../types";
 
@@ -15,11 +17,16 @@ const statusColor: Record<string, string> = {
   offline: colors.muted,
 };
 
-export function VehicleMarker({ vehicle, location, etaMinutes }: Props) {
+export const VehicleMarker = memo(function VehicleMarker({ vehicle, location, etaMinutes }: Props) {
   return (
-    <Marker coordinate={{ latitude: location.lat, longitude: location.lng }}>
+    <Marker
+      coordinate={{ latitude: location.lat, longitude: location.lng }}
+      rotation={location.heading ?? 0}
+      anchor={{ x: 0.5, y: 0.5 }}
+      flat
+    >
       <View style={[styles.pin, { backgroundColor: statusColor[vehicle.stato] ?? colors.sea }]}>
-        <Text style={styles.pinLabel}>{vehicle.nome.replace("Vito ", "V")}</Text>
+        <Ionicons name="car-sport" size={20} color={colors.white} />
       </View>
       <Callout>
         <View style={styles.callout}>
@@ -32,17 +39,18 @@ export function VehicleMarker({ vehicle, location, etaMinutes }: Props) {
       </Callout>
     </Marker>
   );
-}
+});
 
 const styles = StyleSheet.create({
   pin: {
+    width: 36,
+    height: 36,
     borderRadius: radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
     borderColor: colors.white,
   },
-  pinLabel: { color: colors.white, fontWeight: "800", fontSize: 12 },
   callout: { minWidth: 140, padding: 4, gap: 2 },
   calloutTitle: { fontWeight: "800", color: colors.ink },
   calloutMeta: { color: colors.muted, fontSize: 12 },

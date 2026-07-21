@@ -15,6 +15,8 @@ import type { Booking, BookingStatus, TimeSlot } from "../types";
 import { generateBookingCode } from "../utils/bookingCode";
 import { calcolaPrezzo } from "../utils/priceCalculator";
 import { getAdminSettings } from "./adminSettingsService";
+import { getTimeSlot } from "./timeSlotService";
+import { todayISO, formatDateIT } from "../utils/dateUtils";
 
 const bookingsCol = collection(db, "bookings");
 
@@ -151,14 +153,53 @@ export async function listBookingsForVehicleAndSlot(vehicleId: string, timeSlotI
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Booking);
 }
 
-export async function listBookingsForSlot(timeSlotId: string): Promise<Booking[]> {
-  const q = query(
-    bookingsCol,
-    where("timeSlotId", "==", timeSlotId),
-    where("stato", "in", ["paid", "completed"])
-  );
+export type BoardingResult =
+  | { ok: true; booking: Booking }
+  | { ok: false; reason: string; booking?: Booking };
+
+/**
+ * Valida il QR code mostrato dal cliente e conferma la salita a bordo
+ * (capitolato: l'autista inquadra il QR generato alla prenotazione).
+ * Il biglietto è accettato solo se: appartiene al veicolo dell'autista che
+ * sta scansionando, è stato pagato, non è già stato usato/annullato, ed è
+ * valido per la corsa odierna (altrimenti viene rigettato come "scaduto").
+ * Vincolare la query anche su vehicleId (oltre a bookingCode) è necessario
+ * perché le security rules di Firestore richiedono che un autista possa
+ * leggere solo le prenotazioni del proprio veicolo.
+ */
+export async function scanBookingForBoarding(bookingCode: string, vehicleId: string): Promise<BoardingResult> {
+  const q = query(bookingsCol, where("bookingCode", "==", bookingCode.trim().toUpperCase()), where("vehicleId", "==", vehicleId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Booking);
+  if (snap.empty) {
+    return { ok: false, reason: "Biglietto non valido per questo veicolo." };
+  }
+
+  const d = snap.docs[0];
+  const booking = { id: d.id, ...d.data() } as Booking;
+
+  if (booking.stato === "completed") {
+    return { ok: false, reason: "Biglietto già utilizzato.", booking };
+  }
+  if (booking.stato === "cancelled") {
+    return { ok: false, reason: "Prenotazione annullata.", booking };
+  }
+  if (booking.stato === "no_show") {
+    return { ok: false, reason: "Prenotazione segnata come no-show.", booking };
+  }
+  if (booking.stato === "pending") {
+    return { ok: false, reason: "Pagamento non completato.", booking };
+  }
+
+  const slot = await getTimeSlot(booking.timeSlotId);
+  if (!slot) {
+    return { ok: false, reason: "Corsa non trovata.", booking };
+  }
+  if (slot.data !== todayISO()) {
+    return { ok: false, reason: `Biglietto scaduto: valido per il ${formatDateIT(slot.data)}.`, booking };
+  }
+
+  await updateDoc(doc(db, "bookings", booking.id), { stato: "completed" });
+  return { ok: true, booking: { ...booking, stato: "completed" } };
 }
 
 export async function listAllBookings(filters?: {

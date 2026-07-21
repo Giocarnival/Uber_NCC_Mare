@@ -33,14 +33,6 @@
         { "fieldPath": "timeSlotId", "order": "ASCENDING" },
         { "fieldPath": "stato", "order": "ASCENDING" }
       ]
-    },
-    {
-      "collectionGroup": "bookings",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "timeSlotId", "order": "ASCENDING" },
-        { "fieldPath": "stato", "order": "ASCENDING" }
-      ]
     }
   ],
   "fieldOverrides": []

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -13,11 +13,18 @@ import type { Vehicle, VehicleLocation } from "@/types";
 
 const STOP_LIST = [STOPS.sabaudiaCentro, STOPS.lungomare];
 
+// I veicoli inviano la posizione ogni 10-15s (vedi DriverDutyContext), ma
+// l'ETA via Google Routes API viene ricalcolata al massimo ogni 60s per
+// veicolo: evita di pagare/chiamare l'API ad ogni singolo aggiornamento GPS
+// per un dato che in pratica non cambia in modo percepibile in 12 secondi.
+const ETA_REFRESH_MS = 60_000;
+
 export default function CustomerHomeScreen() {
   const { profile } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [locations, setLocations] = useState<VehicleLocation[]>([]);
   const [etaByVehicle, setEtaByVehicle] = useState<Record<string, number | null>>({});
+  const lastEtaFetchRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
     listActiveVehicles().then(setVehicles).catch(() => {});
@@ -26,7 +33,12 @@ export default function CustomerHomeScreen() {
   }, []);
 
   useEffect(() => {
+    const now = Date.now();
     locations.forEach((loc) => {
+      const lastFetch = lastEtaFetchRef.current[loc.vehicleId] ?? 0;
+      if (now - lastFetch < ETA_REFRESH_MS) return;
+      lastEtaFetchRef.current[loc.vehicleId] = now;
+
       getETAToNearestStop({ lat: loc.lat, lng: loc.lng }, STOP_LIST).then((eta) => {
         setEtaByVehicle((prev) => ({ ...prev, [loc.vehicleId]: eta }));
       });
