@@ -1,8 +1,15 @@
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { colors } from "@/constants/theme";
 import { LogoutButton } from "@/components/LogoutButton";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AdminLayout() {
+  const { user, loading } = useAuth();
+
+  if (!loading && !user) {
+    return <Redirect href="/" />;
+  }
+
   return (
     <Stack
       screenOptions={{
