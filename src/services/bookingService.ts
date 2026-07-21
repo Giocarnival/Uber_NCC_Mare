@@ -90,9 +90,16 @@ export async function getBooking(bookingId: string): Promise<Booking | null> {
  * la conferma asincrona che arriva dal webhook Stripe lato server.
  */
 export function subscribeToBooking(bookingId: string, onUpdate: (booking: Booking) => void): () => void {
-  return onSnapshot(doc(db, "bookings", bookingId), (snap) => {
-    if (snap.exists()) onUpdate({ id: snap.id, ...snap.data() } as Booking);
-  });
+  return onSnapshot(
+    doc(db, "bookings", bookingId),
+    (snap) => {
+      if (snap.exists()) onUpdate({ id: snap.id, ...snap.data() } as Booking);
+    },
+    () => {
+      // Es. permission-denied se la sessione termina mentre si attende la
+      // conferma pagamento: nessuna eccezione non gestita da propagare.
+    }
+  );
 }
 
 export async function markBookingStatus(bookingId: string, stato: BookingStatus, paymentId?: string) {

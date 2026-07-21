@@ -16,8 +16,17 @@ export async function reportVehicleLocation(vehicleId: string, lat: number, lng:
 export function subscribeToVehicleLocations(
   onUpdate: (locations: VehicleLocation[]) => void
 ): () => void {
-  const unsub = onSnapshot(collection(db, "vehicleLocations"), (snap) => {
-    onUpdate(snap.docs.map((d) => d.data() as VehicleLocation));
-  });
+  const unsub = onSnapshot(
+    collection(db, "vehicleLocations"),
+    (snap) => {
+      onUpdate(snap.docs.map((d) => d.data() as VehicleLocation));
+    },
+    () => {
+      // Es. permission-denied dopo un logout mentre il listener era ancora
+      // attivo: nessun dato da mostrare, non deve propagare un'eccezione
+      // non gestita che interromperebbe la navigazione in corso.
+      onUpdate([]);
+    }
+  );
   return unsub;
 }
