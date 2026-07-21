@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { router } from "expo-router";
+import type { Ionicons } from "@expo/vector-icons";
 import { AdminStatCard } from "@/components/AdminStatCard";
 import { PrimaryButton } from "@/components/PrimaryButton";
 import { colors, spacing, typography } from "@/constants/theme";
@@ -8,15 +9,15 @@ import { computeDailyReport } from "@/services/reportService";
 import { todayISO } from "@/utils/dateUtils";
 import type { DailyReport } from "@/services/reportService";
 
-const menu = [
-  { label: "Veicoli", href: "/(admin)/vehicles" },
-  { label: "Autisti", href: "/(admin)/drivers" },
-  { label: "Tratte", href: "/(admin)/routes" },
-  { label: "Orari", href: "/(admin)/timeslots" },
-  { label: "Prezzi", href: "/(admin)/pricing" },
-  { label: "Prenotazioni", href: "/(admin)/bookings" },
-  { label: "Report", href: "/(admin)/reports" },
-] as const;
+const menu: Array<{ label: string; href: string; icon: keyof typeof Ionicons.glyphMap }> = [
+  { label: "Veicoli", href: "/(admin)/vehicles", icon: "car-outline" },
+  { label: "Autisti", href: "/(admin)/drivers", icon: "people-outline" },
+  { label: "Tratte", href: "/(admin)/routes", icon: "map-outline" },
+  { label: "Orari", href: "/(admin)/timeslots", icon: "time-outline" },
+  { label: "Prezzi", href: "/(admin)/pricing", icon: "pricetag-outline" },
+  { label: "Prenotazioni", href: "/(admin)/bookings", icon: "clipboard-outline" },
+  { label: "Report", href: "/(admin)/reports", icon: "bar-chart-outline" },
+];
 
 export default function AdminDashboardScreen() {
   const [report, setReport] = useState<DailyReport | null>(null);
@@ -43,7 +44,13 @@ export default function AdminDashboardScreen() {
       <Text style={[styles.title, { marginTop: spacing.lg }]}>Gestione</Text>
       <View style={styles.menu}>
         {menu.map((m) => (
-          <PrimaryButton key={m.href} label={m.label} variant="secondary" onPress={() => router.push(m.href as any)} />
+          <PrimaryButton
+            key={m.href}
+            label={m.label}
+            icon={m.icon}
+            variant="secondary"
+            onPress={() => router.push(m.href as any)}
+          />
         ))}
       </View>
     </ScrollView>

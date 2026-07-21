@@ -43,9 +43,14 @@ export default function CustomerHomeScreen() {
       </View>
 
       <View style={styles.actions}>
-        <PrimaryButton label="Prenota un posto" onPress={() => router.push("/(customer)/route-selection")} />
+        <PrimaryButton
+          label="Prenota un posto"
+          icon="add-circle-outline"
+          onPress={() => router.push("/(customer)/route-selection")}
+        />
         <PrimaryButton
           label="Le mie prenotazioni"
+          icon="ticket-outline"
           variant="secondary"
           onPress={() => router.push("/(customer)/my-bookings")}
         />
