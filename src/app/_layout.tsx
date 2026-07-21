@@ -19,11 +19,13 @@ function AuthGate() {
   const wasAuthenticated = useRef(false);
 
   useEffect(() => {
+    console.log("[AuthGate]", { loading, hasUser: !!user, wasAuthenticated: wasAuthenticated.current });
     if (loading) return;
     if (user) {
       wasAuthenticated.current = true;
     } else if (wasAuthenticated.current) {
       wasAuthenticated.current = false;
+      console.log("[AuthGate] logout detected, redirecting to /");
       router.replace("/");
     }
   }, [loading, user]);

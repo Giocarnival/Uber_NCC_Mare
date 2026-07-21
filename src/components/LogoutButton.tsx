@@ -14,6 +14,7 @@ export function LogoutButton() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   async function handleLogout() {
+    console.log("[LogoutButton] pressed");
     setLoggingOut(true);
     try {
       await Promise.race([
@@ -22,7 +23,9 @@ export function LogoutButton() {
           setTimeout(() => reject(new Error("Il logout non ha risposto in tempo. Riprova.")), 8000)
         ),
       ]);
+      console.log("[LogoutButton] signOut resolved");
     } catch (err: any) {
+      console.log("[LogoutButton] signOut error", err?.message ?? err);
       Alert.alert("Logout non riuscito", err?.message ?? "Riprova.");
     } finally {
       setLoggingOut(false);
