@@ -1,9 +1,8 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { useEffect } from "react";
-import { Ionicons } from "@expo/vector-icons";
 import { PrimaryButton } from "@/components/PrimaryButton";
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { colors, spacing, typography } from "@/constants/theme";
 import { useAuth } from "@/context/AuthContext";
 import { dashboardRouteForRole } from "@/services/authService";
 
@@ -23,9 +22,7 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.badge}>
-        <Ionicons name="sunny-outline" size={40} color={colors.seaDark} />
-      </View>
+      <Image source={require("@/assets/images/logo.png")} style={styles.logoImage} resizeMode="contain" />
       <Text style={styles.logo}>Sabaudia Shuttle</Text>
       <Text style={styles.subtitle}>Sabaudia Centro ⇄ Lungomare, prenota il tuo posto</Text>
 
@@ -54,15 +51,7 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.lg, gap: spacing.md },
-  badge: {
-    width: 88,
-    height: 88,
-    borderRadius: radius.pill,
-    backgroundColor: colors.sand,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.sm,
-  },
+  logoImage: { width: 120, height: 102, marginBottom: spacing.sm },
   logo: { fontSize: typography.title.fontSize, fontWeight: "800", color: colors.seaDark },
   subtitle: { fontSize: typography.body.fontSize, color: colors.muted, textAlign: "center" },
   actions: { width: "100%", maxWidth: 360, gap: spacing.md, marginTop: spacing.lg },
