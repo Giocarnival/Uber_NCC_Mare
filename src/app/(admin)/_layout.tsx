@@ -1,6 +1,7 @@
 import { Redirect, Stack } from "expo-router";
 import { colors } from "@/constants/theme";
 import { LogoutButton } from "@/components/LogoutButton";
+import { AppHeaderTitle } from "@/components/AppHeaderTitle";
 import { useAuth } from "@/context/AuthContext";
 
 export default function AdminLayout() {
@@ -13,8 +14,9 @@ export default function AdminLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.sea },
+        headerStyle: { backgroundColor: colors.navy },
         headerTintColor: colors.white,
+        headerTitle: (props) => <AppHeaderTitle subtitle={props.children} />,
         contentStyle: { backgroundColor: colors.sand },
         headerRight: () => <LogoutButton />,
       }}

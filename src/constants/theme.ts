@@ -3,8 +3,11 @@
 export const colors = {
   sea: "#0E7C9D",
   seaDark: "#095C77",
+  navy: "#123A5C",
   sand: "#F2E4C9",
   sandDark: "#E4CE9F",
+  accent: "#F0A030",
+  accentDark: "#D6871A",
   white: "#FFFFFF",
   ink: "#1B2B34",
   muted: "#6B7A82",

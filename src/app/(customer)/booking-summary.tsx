@@ -8,8 +8,10 @@ import { useAuth } from "@/context/AuthContext";
 import { createBooking } from "@/services/bookingService";
 import { calcolaPrezzo } from "@/utils/priceCalculator";
 import { getAdminSettings } from "@/services/adminSettingsService";
+import { getRoute } from "@/services/routeService";
 import { formatDateIT } from "@/utils/dateUtils";
 import { DEFAULT_PRICING } from "@/constants/config";
+import type { Route } from "@/types";
 
 export default function BookingSummaryScreen() {
   const params = useLocalSearchParams<{
@@ -22,6 +24,7 @@ export default function BookingSummaryScreen() {
   }>();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [route, setRoute] = useState<Route | null>(null);
   const [pricing, setPricing] = useState({
     prezzoSingola: DEFAULT_PRICING.prezzoSingola,
     prezzoAR: DEFAULT_PRICING.prezzoAR,
@@ -29,7 +32,8 @@ export default function BookingSummaryScreen() {
 
   useEffect(() => {
     getAdminSettings().then((s) => setPricing({ prezzoSingola: s.prezzoSingola, prezzoAR: s.prezzoAR }));
-  }, []);
+    getRoute(params.routeId).then(setRoute);
+  }, [params.routeId]);
 
   const numeroPasseggeri = Number(params.passeggeri) || 1;
   const andataERitorno = params.andataERitorno === "1";
@@ -60,13 +64,15 @@ export default function BookingSummaryScreen() {
   return (
     <View style={styles.container}>
       <BookingSummaryCard
-        tratta={andataERitorno ? "Andata e ritorno" : "Sola andata"}
+        origine={route?.origine ?? "…"}
+        destinazione={route?.destinazione ?? "…"}
         data={formatDateIT(params.data)}
         orario={params.oraPartenza}
         numeroPasseggeri={numeroPasseggeri}
         prezzoTotale={prezzoTotale}
+        andataERitorno={andataERitorno}
       />
-      <PrimaryButton label="Procedi al pagamento" onPress={handleConfirm} loading={loading} />
+      <PrimaryButton label="Conferma prenotazione" variant="accent" onPress={handleConfirm} loading={loading} />
     </View>
   );
 }

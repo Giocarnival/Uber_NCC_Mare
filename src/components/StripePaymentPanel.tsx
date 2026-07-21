@@ -88,7 +88,7 @@ export function StripePaymentPanel({ bookingId }: Props) {
       {initializing && <ActivityIndicator color={colors.sea} />}
       {initError && <Text style={styles.error}>{initError}</Text>}
 
-      <PrimaryButton label="Paga ora" onPress={handlePay} loading={paying} disabled={!ready} />
+      <PrimaryButton label="Paga ora" variant="accent" onPress={handlePay} loading={paying} disabled={!ready} />
       <PrimaryButton label="Annulla prenotazione" variant="secondary" onPress={handleCancel} disabled={paying} />
     </View>
   );

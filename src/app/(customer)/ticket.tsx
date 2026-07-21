@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, Image, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { TicketQRCode } from "@/components/TicketQRCode";
@@ -17,7 +17,7 @@ export default function TicketScreen() {
   }, [bookingId]);
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.checkBadge}>
         <Ionicons name="checkmark" size={36} color={colors.white} />
       </View>
@@ -28,13 +28,17 @@ export default function TicketScreen() {
         <ActivityIndicator color={colors.sea} />
       )}
       <Text style={styles.hint}>Mostra questo codice all'autista al momento della salita.</Text>
+
+      <Image source={require("@/assets/images/hero-van-2.png")} style={styles.hero} resizeMode="cover" />
+      <Text style={styles.enjoy}>Buon viaggio verso il mare! 🌊</Text>
+
       <PrimaryButton label="Torna alla home" icon="home-outline" onPress={() => router.replace("/(customer)")} />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.lg, gap: spacing.lg },
+  container: { flexGrow: 1, alignItems: "center", padding: spacing.lg, gap: spacing.lg, justifyContent: "center" },
   checkBadge: {
     width: 64,
     height: 64,
@@ -45,4 +49,6 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: typography.heading.fontSize, fontWeight: "800", color: colors.ink },
   hint: { color: colors.muted, textAlign: "center" },
+  hero: { width: "100%", maxWidth: 360, height: 160, borderRadius: radius.lg },
+  enjoy: { fontWeight: "700", color: colors.seaDark, fontSize: typography.body.fontSize },
 });

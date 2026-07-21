@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Pressable, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { Pressable, Text, StyleSheet, ActivityIndicator, Alert } from "react-native";
 import { colors } from "../constants/theme";
 import { logoutUser } from "../services/authService";
 
 /**
  * Non naviga esplicitamente dopo il logout: la navigazione verso "/" è
- * gestita in modo reattivo da useRequireAuth() nel layout del gruppo
- * (customer/driver/admin), che si attiva non appena l'utente diventa null.
- * Farla anche qui creava una doppia navigazione in corsa con quella
- * reattiva, causando un errore di navigazione intermittente.
+ * gestita in modo dichiarativo da <Redirect> nei layout di
+ * customer/driver/admin, che si attiva appena l'utente diventa null.
+ * Il timeout evita che il pulsante resti bloccato a ruotare all'infinito
+ * se signOut() dovesse impiegare troppo (es. problemi di rete).
  */
 export function LogoutButton() {
   const [loggingOut, setLoggingOut] = useState(false);
@@ -16,8 +16,15 @@ export function LogoutButton() {
   async function handleLogout() {
     setLoggingOut(true);
     try {
-      await logoutUser();
-    } catch {
+      await Promise.race([
+        logoutUser(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Il logout non ha risposto in tempo. Riprova.")), 8000)
+        ),
+      ]);
+    } catch (err: any) {
+      Alert.alert("Logout non riuscito", err?.message ?? "Riprova.");
+    } finally {
       setLoggingOut(false);
     }
   }

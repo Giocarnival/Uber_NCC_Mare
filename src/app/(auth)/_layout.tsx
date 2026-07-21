@@ -1,12 +1,14 @@
 import { Stack } from "expo-router";
 import { colors } from "@/constants/theme";
+import { AppHeaderTitle } from "@/components/AppHeaderTitle";
 
 export default function AuthLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.sea },
+        headerStyle: { backgroundColor: colors.navy },
         headerTintColor: colors.white,
+        headerTitle: (props) => <AppHeaderTitle subtitle={props.children} />,
         contentStyle: { backgroundColor: colors.sand },
       }}
     >

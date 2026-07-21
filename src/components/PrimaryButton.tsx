@@ -7,7 +7,7 @@ interface Props {
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
-  variant?: "primary" | "secondary" | "danger";
+  variant?: "primary" | "secondary" | "danger" | "accent";
   icon?: keyof typeof Ionicons.glyphMap;
   style?: ViewStyle;
 }
@@ -25,6 +25,7 @@ export function PrimaryButton({ label, onPress, disabled, loading, variant = "pr
         variant === "primary" && styles.primary,
         variant === "secondary" && styles.secondary,
         variant === "danger" && styles.danger,
+        variant === "accent" && styles.accent,
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
         style,
@@ -54,6 +55,7 @@ const styles = StyleSheet.create({
   primary: { backgroundColor: colors.sea },
   secondary: { backgroundColor: colors.white, borderWidth: 1.5, borderColor: colors.sea },
   danger: { backgroundColor: colors.danger },
+  accent: { backgroundColor: colors.accent },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
   label: { fontSize: typography.body.fontSize, fontWeight: "700" },

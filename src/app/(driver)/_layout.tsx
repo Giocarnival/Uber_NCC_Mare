@@ -1,6 +1,7 @@
 import { Redirect, Stack } from "expo-router";
 import { colors } from "@/constants/theme";
 import { LogoutButton } from "@/components/LogoutButton";
+import { AppHeaderTitle } from "@/components/AppHeaderTitle";
 import { DriverDutyProvider } from "@/context/DriverDutyContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -15,8 +16,9 @@ export default function DriverLayout() {
     <DriverDutyProvider>
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: colors.sea },
+          headerStyle: { backgroundColor: colors.navy },
           headerTintColor: colors.white,
+          headerTitle: (props) => <AppHeaderTitle subtitle={props.children} />,
           contentStyle: { backgroundColor: colors.sand },
           headerRight: () => <LogoutButton />,
         }}

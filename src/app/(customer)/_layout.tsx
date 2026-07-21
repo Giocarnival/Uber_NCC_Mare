@@ -1,6 +1,7 @@
 import { Redirect, Stack } from "expo-router";
 import { colors } from "@/constants/theme";
 import { LogoutButton } from "@/components/LogoutButton";
+import { AppHeaderTitle } from "@/components/AppHeaderTitle";
 import { useAuth } from "@/context/AuthContext";
 
 export default function CustomerLayout() {
@@ -13,13 +14,14 @@ export default function CustomerLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.sea },
+        headerStyle: { backgroundColor: colors.navy },
         headerTintColor: colors.white,
+        headerTitle: (props) => <AppHeaderTitle subtitle={props.children} />,
         contentStyle: { backgroundColor: colors.sand },
         headerRight: () => <LogoutButton />,
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Sabaudia Shuttle" }} />
+      <Stack.Screen name="index" options={{ title: "Home" }} />
       <Stack.Screen name="route-selection" options={{ title: "Scegli la tratta" }} />
       <Stack.Screen name="time-slot-selection" options={{ title: "Data e orario" }} />
       <Stack.Screen name="booking-summary" options={{ title: "Riepilogo" }} />

@@ -50,7 +50,7 @@ export function StripePaymentPanel({ bookingId }: Props) {
         Versione web di sviluppo: il pagamento è simulato. L'app mobile usa Stripe PaymentSheet
         reale — l'integrazione web con Stripe Elements è nella roadmap.
       </Text>
-      <PrimaryButton label="Paga ora (simulato)" onPress={handlePay} loading={loading} />
+      <PrimaryButton label="Paga ora (simulato)" variant="accent" onPress={handlePay} loading={loading} />
       <PrimaryButton label="Annulla prenotazione" variant="secondary" onPress={handleCancel} disabled={loading} />
     </View>
   );
