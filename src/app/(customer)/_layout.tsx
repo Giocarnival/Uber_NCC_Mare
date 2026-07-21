@@ -1,16 +1,9 @@
-import { Redirect, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { colors } from "@/constants/theme";
 import { LogoutButton } from "@/components/LogoutButton";
 import { AppHeaderTitle } from "@/components/AppHeaderTitle";
-import { useAuth } from "@/context/AuthContext";
 
 export default function CustomerLayout() {
-  const { user, loading } = useAuth();
-
-  if (!loading && !user) {
-    return <Redirect href="/" />;
-  }
-
   return (
     <Stack
       screenOptions={{

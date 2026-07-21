@@ -5,10 +5,10 @@ import { logoutUser } from "../services/authService";
 
 /**
  * Non naviga esplicitamente dopo il logout: la navigazione verso "/" è
- * gestita in modo dichiarativo da <Redirect> nei layout di
- * customer/driver/admin, che si attiva appena l'utente diventa null.
- * Il timeout evita che il pulsante resti bloccato a ruotare all'infinito
- * se signOut() dovesse impiegare troppo (es. problemi di rete).
+ * gestita da AuthGate nel layout root (src/app/_layout.tsx), che rileva la
+ * transizione autenticato→non autenticato una sola volta. Il timeout evita
+ * che il pulsante resti bloccato a ruotare all'infinito se signOut()
+ * dovesse impiegare troppo (es. problemi di rete).
  */
 export function LogoutButton() {
   const [loggingOut, setLoggingOut] = useState(false);
